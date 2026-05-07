@@ -135,3 +135,148 @@ WantedBy=default.target
 ## License
 
 MIT
+
+## Tunneling / HTTPS options
+
+Telegram Mini Apps require a public **HTTPS** URL. Pick one:
+
+### Option A — Cloudflare Quick Tunnel (fast test)
+
+No account required, but URL is temporary and not production-stable.
+
+```bash
+cloudflared tunnel --url http://127.0.0.1:8787 --no-autoupdate
+```
+
+Cloudflare prints a URL like:
+
+```text
+https://random-words.trycloudflare.com
+```
+
+Use that URL in `setChatMenuButton`.
+
+> Good for testing. Not recommended for permanent usage because the URL can change after restart.
+
+### Option B — Cloudflare Named Tunnel (recommended)
+
+Best for always-on private use with your own domain/subdomain.
+
+High-level flow:
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create vps-monitor
+cloudflared tunnel route dns vps-monitor vps.example.com
+```
+
+Create `~/.cloudflared/config.yml`:
+
+```yaml
+tunnel: vps-monitor
+credentials-file: /home/ubuntu/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: vps.example.com
+    service: http://127.0.0.1:8787
+  - service: http_status:404
+```
+
+Run:
+
+```bash
+cloudflared tunnel run vps-monitor
+```
+
+Then set your Telegram Mini App URL to:
+
+```text
+https://vps.example.com
+```
+
+### Option C — ngrok
+
+Good if you already have ngrok and a static domain.
+
+```bash
+ngrok config add-authtoken <NGROK_TOKEN>
+ngrok http 8787
+```
+
+For stable use, configure a static ngrok domain:
+
+```bash
+ngrok http --domain=your-static-domain.ngrok-free.app 8787
+```
+
+### Option D — Caddy/Nginx + domain
+
+If your VPS has a public IP and domain DNS points to it, reverse proxy to local Flask:
+
+```text
+https://vps.example.com -> http://127.0.0.1:8787
+```
+
+Caddy example:
+
+```caddyfile
+vps.example.com {
+  reverse_proxy 127.0.0.1:8787
+}
+```
+
+## Ask an AI agent to install this app
+
+You can paste this prompt into OpenClaw, Claude Code, Codex, Cursor, or another coding agent with VPS shell access.
+
+```text
+Install and configure Telegram VPS Monitor Mini App on this Linux VPS.
+
+Repository:
+https://github.com/adryndian/telegram-vps-monitor-miniapp
+
+Requirements:
+1. Clone repo to /opt/telegram-vps-monitor-miniapp or ~/telegram-vps-monitor-miniapp.
+2. Create Python venv and install requirements.txt.
+3. Create .env from .env.example.
+4. Ask me for:
+   - Telegram bot token
+   - my Telegram numeric user ID
+   - preferred public HTTPS method: Cloudflare Tunnel, ngrok, or domain reverse proxy
+5. Set DASHBOARD_PASSWORD to a strong random value.
+6. Set ALLOWED_TG_USER_ID to my Telegram user ID.
+7. Set TELEGRAM_BOT_TOKEN to my bot token.
+8. Keep TERMINAL_PASSWORD_FALLBACK=false.
+9. Create a systemd user service or system service that runs:
+   gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
+10. Start and enable the service.
+11. Verify http://127.0.0.1:8787/api/metrics works.
+12. Configure HTTPS tunnel/reverse proxy.
+13. Use Telegram Bot API setChatMenuButton with text "VPS" and the HTTPS URL.
+14. Test the Mini App from Telegram.
+15. Do not commit or print secrets. Show only masked credentials.
+
+Security:
+- Never expose the app over plain HTTP publicly.
+- Never commit .env.
+- Terminal routes /terminal, /claude, /codex must only work for the allowlisted Telegram user.
+```
+
+## AI agent maintenance prompt
+
+Use this when asking an AI agent to update an existing install:
+
+```text
+Update my Telegram VPS Monitor Mini App safely.
+
+Tasks:
+1. Go to the app directory.
+2. Check git status and show me local changes before overwriting anything.
+3. Pull latest changes from main.
+4. Preserve .env.
+5. Reinstall requirements if changed.
+6. Restart the dashboard service.
+7. Verify /api/metrics, /, /terminal, /claude, and /codex routes.
+8. Confirm Telegram Mini App URL still works.
+9. Do not reveal bot token, dashboard password, or tunnel credentials.
+```
