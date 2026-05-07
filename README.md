@@ -80,14 +80,32 @@ Telegram iOS/WebView is convenient, but it is not a full terminal emulator. Trea
 
 ## Quick start
 
+This quick start is for local/dev validation. For a real Telegram Mini App, you still need a public HTTPS tunnel/domain and `setChatMenuButton` setup.
+
 ```bash
-git clone https://github.com/YOUR_USERNAME/telegram-vps-monitor-miniapp.git
+git clone https://github.com/adryndian/telegram-vps-monitor-miniapp.git
 cd telegram-vps-monitor-miniapp
+
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
+
 cp .env.example .env
 nano .env
+```
+
+Minimum `.env` values:
+
+```env
+DASHBOARD_PASSWORD=change-this-to-a-strong-random-password
+ALLOWED_TG_USER_ID=your_numeric_telegram_user_id
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TERMINAL_PASSWORD_FALLBACK=false
+```
+
+Run dev server:
+
+```bash
 python app.py
 ```
 
@@ -96,6 +114,19 @@ Open locally:
 ```text
 http://127.0.0.1:8787
 ```
+
+Production-style run:
+
+```bash
+gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
+```
+
+Then finish the Telegram Mini App setup:
+
+1. Expose `127.0.0.1:8787` through HTTPS using Cloudflare Tunnel, ngrok, or a domain reverse proxy.
+2. Set the Telegram bot menu button text to `VPS`.
+3. Point the menu button URL to your HTTPS tunnel/domain.
+4. Open the Mini App from Telegram and verify dashboard + terminal auth.
 
 ## Environment
 
