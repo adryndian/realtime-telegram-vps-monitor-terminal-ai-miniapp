@@ -8,9 +8,9 @@ A lightweight internal Telegram Mini App for private server operators. Built for
 
 <p align="center">
   <img src="docs/screenshots/dashboard-mobile.jpg" width="220" alt="Mobile VPS dashboard" />
-  <img src="docs/screenshots/telegram-vps-menu.jpg" width="220" alt="Telegram VPS menu button" />
   <img src="docs/screenshots/codex-terminal-mobile.jpg" width="220" alt="Codex terminal via Telegram" />
   <img src="docs/screenshots/claude-terminal-mobile.jpg" width="220" alt="Claude Code terminal via Telegram" />
+  <img src="docs/screenshots/telegram-vps-menu.jpg" width="220" alt="Telegram VPS menu button" />
 </p>
 
 ## Why this exists
