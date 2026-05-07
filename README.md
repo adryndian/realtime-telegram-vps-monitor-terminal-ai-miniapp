@@ -132,9 +132,6 @@ WantedBy=default.target
 - Rotate tunnel URLs/passwords if leaked
 - Do not share screenshots containing public tunnel URLs
 
-## License
-
-MIT
 
 ## Tunneling / HTTPS options
 
@@ -280,3 +277,6 @@ Tasks:
 8. Confirm Telegram Mini App URL still works.
 9. Do not reveal bot token, dashboard password, or tunnel credentials.
 ```
+## License
+
+MIT
