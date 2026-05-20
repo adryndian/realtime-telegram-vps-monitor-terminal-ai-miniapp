@@ -17,33 +17,60 @@ def telegram_token():
 
 def verify_tg_init_data(init_data):
     token = telegram_token()
-    if not token or not init_data: return False
+    if not token or not init_data:
+        print("[VERIFY] Missing token or initData")
+        return False
     parsed = dict(urllib.parse.parse_qsl(init_data, keep_blank_values=True))
     recv_hash = parsed.pop('hash', '')
-    if not recv_hash: return False
+    if not recv_hash:
+        print("[VERIFY] No hash in initData")
+        return False
     data_check = '\n'.join(f'{k}={v}' for k,v in sorted(parsed.items()))
+    print(f"[VERIFY] data_check string:\n{data_check[:200]}")
     secret = hmac.new(b'WebAppData', token.encode(), hashlib.sha256).digest()
     calc = hmac.new(secret, data_check.encode(), hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(calc, recv_hash): return False
+    print(f"[VERIFY] recv_hash: {recv_hash[:20]}...")
+    print(f"[VERIFY] calc_hash: {calc[:20]}...")
+    if not hmac.compare_digest(calc, recv_hash):
+        print("[VERIFY] Hash mismatch!")
+        return False
     try:
         user=json.loads(parsed.get('user','{}'))
-        return str(user.get('id')) == str(ALLOWED_TG_USER_ID)
-    except Exception:
+        user_id = str(user.get('id'))
+        allowed_id = str(ALLOWED_TG_USER_ID)
+        print(f"[VERIFY] user_id={user_id}, allowed={allowed_id}")
+        return user_id == allowed_id
+    except Exception as e:
+        print(f"[VERIFY] Exception: {e}")
         return False
 
 def auth_ok():
     if PASSWORD in ('', 'change-me'):
+        print("[AUTH] Password not configured")
+        return False
+    auth = request.authorization
+    if auth and auth.password == PASSWORD:
+        print("[AUTH] ✓ Basic auth OK")
         return True
     if request.cookies.get('vpsmon_auth') == PASSWORD or request.headers.get('X-Dashboard-Password') == PASSWORD:
+        print("[AUTH] ✓ Cookie/header auth OK")
         return True
-    if verify_tg_init_data(request.headers.get('X-Telegram-Init-Data','')):
+    init_data = request.headers.get('X-Telegram-Init-Data','') or request.args.get('tg','')
+    print(f"[AUTH] Telegram initData: {init_data[:50]}..." if init_data else "[AUTH] No Telegram initData")
+    if verify_tg_init_data(init_data):
+        print("[AUTH] ✓ Telegram auth OK")
         return True
+    print("[AUTH] ✗ All auth methods failed")
     return False
 
 def require_auth(fn):
     @wraps(fn)
     def wrap(*a, **kw):
         if not auth_ok():
+            # Don't send WWW-Authenticate header if accessed from Telegram (prevents Basic Auth prompt)
+            user_agent = request.headers.get('User-Agent', '')
+            if 'Telegram' in user_agent or request.headers.get('X-Telegram-Init-Data'):
+                return Response('Unauthorized - Please open from Telegram bot menu', 401)
             return Response('Unauthorized', 401, {'WWW-Authenticate': 'Basic realm="vps-monitor"'})
         return fn(*a, **kw)
     return wrap
@@ -106,7 +133,11 @@ def metrics():
     load=os.getloadavg(); cores=os.cpu_count() or 1
     up=float(open('/proc/uptime').read().split()[0])
     cp=cpu_pct(); rp=round(used/mt*100,1); dp=round(du.used/du.total*100,1); lpc=round(load[0]/cores,2)
-    services=[svc_status('OpenClaw', '/home/ubuntu/.npm-global/bin/openclaw gateway status >/dev/null'), svc_status('9Router', 'curl -fsS --max-time 2 http://127.0.0.1:20128 >/dev/null'), svc_status('Dashboard', 'systemctl --user is-active --quiet vps-monitor-dashboard.service')]
+    services=[
+        svc_status('Hermes Bot', 'pgrep -f "hermes_cli.main gateway" >/dev/null'),
+        svc_status('9Router', 'curl -fsS --max-time 2 http://127.0.0.1:20128 >/dev/null'),
+        svc_status('Dashboard', 'pgrep -f "python app.py" >/dev/null')
+    ]
     alerts=[]
     if rp>=75: alerts.append(f'RAM {rp}%')
     if dp>=75: alerts.append(f'Disk {dp}%')
@@ -124,7 +155,12 @@ def metrics():
     }
 
 @app.route('/')
-def index(): return render_template('index.html', refresh=REFRESH_SECONDS)
+def index_redirect():
+    # Serve page without auth - auth will be checked on API calls
+    return render_template('index.html', refresh=REFRESH_SECONDS)
+
+@app.route('/debug')
+def debug(): return render_template('debug.html')
 
 @app.route('/api/metrics')
 @require_auth
@@ -139,12 +175,15 @@ def login():
 
 
 @app.route('/terminal')
+@require_auth
 def terminal(): return render_template('terminal.html')
 
 @app.route('/claude')
+@require_auth
 def claude_terminal(): return render_template('terminal.html', auto='claude')
 
 @app.route('/codex')
+@require_auth
 def codex_terminal(): return render_template('terminal.html', auto='codex')
 
 def ws_auth(ws):
