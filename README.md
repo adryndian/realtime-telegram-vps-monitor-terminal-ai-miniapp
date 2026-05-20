@@ -9,8 +9,7 @@ A lightweight, self-hosted Telegram Mini App for private server operators. Glass
 <p align="center">
    <img src="docs/screenshots/dashboard-mobile1.png" width="220" alt="Telegram VPS dashboard" />
   <img src="docs/screenshots/dashboard-mobile.jpg" width="220" alt="Mobile VPS dashboard" />
-  <img src="docs/screenshots/codex-terminal-mobile.jpg" width="220" alt="Codex terminal via Telegram" />
-  <img src="docs/screenshots/telegram-vps-menu.png" width="420" alt="Telegram VPS menu button" />
+  <img src="docs/screenshots/telegram-vps-menu.png" width="620" alt="Telegram VPS menu button" />
 </p>
 
 ---
