@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Telegram Web App Debug</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #050914; color: #fff; }
+        pre { background: #111; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        h1 { color: #4a9eff; }
+    </style>
+</head>
+<body>
+    <h1>Telegram Web App Debug</h1>
+    <pre id="output">Loading...</pre>
+    <script>
+        const output = document.getElementById('output');
+        let info = 'Telegram object: ' + (typeof window.Telegram) + '\n\n';
+        
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            info += 'WebApp found: YES\n';
+            info += 'initData length: ' + (Telegram.WebApp.initData ? Telegram.WebApp.initData.length : 0) + '\n';
+            info += 'initData: ' + (Telegram.WebApp.initData || '(empty)') + '\n\n';
+            info += 'initDataUnsafe:\n' + JSON.stringify(Telegram.WebApp.initDataUnsafe, null, 2) + '\n\n';
+            info += 'version: ' + Telegram.WebApp.version + '\n';
+            info += 'platform: ' + Telegram.WebApp.platform + '\n';
+            info += 'colorScheme: ' + Telegram.WebApp.colorScheme + '\n';
+        } else {
+            info += 'WebApp found: NO\n';
+            info += 'This page must be opened from Telegram bot menu or inline button.\n';
+        }
+        
+        info += '\n--- Headers Test ---\n';
+        info += 'User-Agent: ' + navigator.userAgent + '\n';
+        
+        output.textContent = info;
+    </script>
+</body>
+</html>

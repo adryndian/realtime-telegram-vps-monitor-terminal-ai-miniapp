@@ -57,3 +57,7 @@ nohup.out
 # Runtime
 *.pid
 *.sock
+
+# User-specific local launcher (use systemd service instead)
+start.sh
+start.sh.local
