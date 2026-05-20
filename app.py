@@ -204,12 +204,18 @@ def ws_terminal(ws):
     if not ws_auth(ws):
         ws.send('\r\nUnauthorized\r\n'); return
     cmd = request.args.get('cmd','bash')
-    if cmd == 'claude': argv=['/home/ubuntu/.npm-global/bin/claude']
-    elif cmd == 'codex': argv=['/home/ubuntu/.local/bin/codex'] if os.path.exists('/home/ubuntu/.local/bin/codex') else ['/usr/bin/env','codex']
+    # Resolve binaries via PATH; fall back to env-overridable absolute paths.
+    def _resolve(name, env_var):
+        override = os.environ.get(env_var)
+        if override and os.path.exists(override): return override
+        found = shutil.which(name)
+        return found or name
+    if cmd == 'claude': argv=[_resolve('claude','CLAUDE_BIN')]
+    elif cmd == 'codex': argv=[_resolve('codex','CODEX_BIN')]
     else: argv=['/bin/bash','-l']
     pid, fd = pty.fork()
     if pid == 0:
-        os.chdir('/home/ubuntu')
+        os.chdir(os.environ.get('TERMINAL_HOME', os.path.expanduser('~')))
         os.environ['TERM']='xterm-256color'
         os.execv(argv[0], argv)
     try:

@@ -197,7 +197,7 @@ Create `~/.cloudflared/config.yml`:
 
 ```yaml
 tunnel: vps-monitor
-credentials-file: /home/ubuntu/.cloudflared/<TUNNEL_ID>.json
+credentials-file: /home/<USER>/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
   - hostname: vps.example.com
@@ -241,10 +241,10 @@ After=network.target
 
 [Service]
 Type=simple
-User=ubuntu
-WorkingDirectory=/home/ubuntu/telegram-vps-monitor-terminal-ai-miniapp
-EnvironmentFile=/home/ubuntu/telegram-vps-monitor-terminal-ai-miniapp/.env
-ExecStart=/home/ubuntu/telegram-vps-monitor-terminal-ai-miniapp/.venv/bin/gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
+User=<USER>
+WorkingDirectory=/home/<USER>/telegram-vps-monitor-terminal-ai-miniapp
+EnvironmentFile=/home/<USER>/telegram-vps-monitor-terminal-ai-miniapp/.env
+ExecStart=/home/<USER>/telegram-vps-monitor-terminal-ai-miniapp/.venv/bin/gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
 Restart=always
 RestartSec=5
 KillMode=mixed
