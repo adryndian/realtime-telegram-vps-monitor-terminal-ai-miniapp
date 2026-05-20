@@ -81,7 +81,7 @@ This app puts that whole workflow behind a single Telegram Mini App button.
 For Ubuntu/Debian VPS. Run as the user that will own the service (typically `ubuntu` or your shell user — **not** root).
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/adryndian/realtime-telegram-vps-monitor-terminal-ai-miniapp/main/scripts/install.sh | bash
 ```
 
 > If the install script doesn't exist yet (this repo is still bootstrapping), use the **Manual install** below.
@@ -103,7 +103,7 @@ The script will:
 ### 1. Clone & set up
 
 ```bash
-git clone https://github.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp.git
+git clone https://github.com/adryndian/realtime-telegram-vps-monitor-terminal-ai-miniapp.git
 cd telegram-vps-monitor-terminal-ai-miniapp
 
 python3 -m venv .venv
@@ -312,7 +312,7 @@ Paste this into Claude Code, Codex, OpenClaw, Cursor, or another coding agent wi
 Install and configure Telegram VPS Monitor Mini App on this Linux VPS.
 
 Repository:
-https://github.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp
+https://github.com/adryndian/realtime-telegram-vps-monitor-terminal-ai-miniapp
 
 Goal:
 Create a private Telegram Mini App that lets me monitor the VPS and run

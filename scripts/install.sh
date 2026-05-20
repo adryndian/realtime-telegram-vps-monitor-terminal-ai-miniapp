@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Telegram VPS Monitor Mini App — one-command installer
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp/main/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/adryndian/realtime-telegram-vps-monitor-terminal-ai-miniapp/main/scripts/install.sh | bash
 #
 # Run as the user that will own the service (NOT root).
 # Tested on: Ubuntu 22.04 / 24.04, Debian 12
@@ -11,7 +11,7 @@ set -euo pipefail
 # ────────────────────────────────────────────────────────────
 # Config
 # ────────────────────────────────────────────────────────────
-REPO_URL="https://github.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp.git"
+REPO_URL="https://github.com/adryndian/realtime-telegram-vps-monitor-terminal-ai-miniapp.git"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/telegram-vps-monitor-terminal-ai-miniapp}"
 SERVICE_NAME="telegram-vps-monitor"
 DEFAULT_PORT="${PORT:-8787}"
