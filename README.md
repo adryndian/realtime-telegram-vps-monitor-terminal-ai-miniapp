@@ -7,10 +7,11 @@ A lightweight, self-hosted Telegram Mini App for private server operators. Glass
 > Best use case: **emergency access + small tasks**. For long/heavy interactive terminal work, SSH/desktop terminal is still the better tool.
 
 <p align="center">
+   <img src="docs/screenshots/dashboard-moblie1.png" width="220" alt="Telegram VPS dashboard" />
   <img src="docs/screenshots/dashboard-mobile.jpg" width="220" alt="Mobile VPS dashboard" />
   <img src="docs/screenshots/codex-terminal-mobile.jpg" width="220" alt="Codex terminal via Telegram" />
   <img src="docs/screenshots/claude-terminal-mobile.jpg" width="220" alt="Claude Code terminal via Telegram" />
-  <img src="docs/screenshots/telegram-vps-menu.jpg" width="220" alt="Telegram VPS menu button" />
+  <img src="docs/screenshots/telegram-vps-menu.png" width="220" alt="Telegram VPS menu button" />
 </p>
 
 ---
