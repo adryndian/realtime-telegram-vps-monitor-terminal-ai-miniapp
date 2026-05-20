@@ -1,8 +1,8 @@
 # Telegram VPS Monitor Mini App
 
-**Monitor your VPS, open an emergency terminal, and run Claude Code / Codex directly from Telegram.**
+**Monitor your VPS, open an emergency terminal, and run Claude Code / Codex — straight from Telegram.**
 
-A lightweight internal Telegram Mini App for private server operators. Built for quick checks, urgent fixes, and small AI-assisted tasks from your phone — without opening a full SSH client.
+A lightweight, self-hosted Telegram Mini App for private server operators. Glassmorphism UI, mobile-first, Flask + vanilla JS — no build step, no framework lock-in.
 
 > Best use case: **emergency access + small tasks**. For long/heavy interactive terminal work, SSH/desktop terminal is still the better tool.
 
@@ -13,191 +13,180 @@ A lightweight internal Telegram Mini App for private server operators. Built for
   <img src="docs/screenshots/telegram-vps-menu.jpg" width="220" alt="Telegram VPS menu button" />
 </p>
 
+---
+
+## What's new (v2026-05)
+
+- 🎨 **Redesigned UI** — aurora gradient background, glassmorphism panels, gradient text on metrics, animated pulse status, shimmer skeleton loading
+- 🔐 **Fixed terminal auth** — terminal CTAs on home page now correctly forward Telegram `initData` via `?tg=` query param
+- ⚡ **Terminal CTAs on dashboard** — open Terminal or Claude Code without leaving the home view
+- 📱 **Better mobile typography** — tabular-nums, tuned letter-spacing, breakpoint at 380px
+- 🔍 **Visible health indicators** — animated pulse dot on status badges, shimmer skeleton until first metrics arrive
+
+---
+
 ## Why this exists
 
-Sometimes you only have your phone.
-
-You need to:
+Sometimes you only have your phone. You need to:
 
 - check whether the VPS is alive
 - inspect CPU/RAM/disk/load
 - restart or inspect a service
 - run a quick shell command
-- ask **Claude Code** to patch something small
+- ask **Claude Code** to patch something
 - ask **Codex** to review/fix current changes
 - handle an urgent production issue before reaching your laptop
 
-This app puts that workflow behind a Telegram Mini App button.
+This app puts that whole workflow behind a single Telegram Mini App button.
+
+---
 
 ## Highlights
 
-- 📊 **Mobile VPS dashboard** — CPU, load, RAM, disk, uptime, services, processes
+- 📊 **Mobile dashboard** — CPU (with ring + gradient text), RAM, disk, load, uptime, services, top processes
 - 📱 **Telegram Mini App** — opens from a `VPS` button inside Telegram
 - 🧠 **Claude Code from Telegram** — quick coding fixes, reviews, small edits
 - 🤖 **Codex from Telegram** — review/change tasks from a mobile terminal
-- 🖥️ **Web terminal** — PTY shell powered by xterm.js
-- 🔐 **Telegram auth** — validates Telegram `initData` + allowlisted user ID
-- ⚡ **Lightweight** — Flask + vanilla JS, no frontend build step
-- 🧩 **Simple deployment** — Gunicorn + systemd + HTTPS tunnel/domain
+- 🖥️ **Web terminal** — PTY shell powered by xterm.js, mobile keyboard helpers
+- 🔐 **Telegram auth** — verifies `initData` HMAC + allowlists user ID
+- ⚡ **Lightweight** — Flask + vanilla JS, zero build step
+- 🧩 **Simple deployment** — gunicorn + systemd + HTTPS tunnel/domain
 
-## Intended usage
-
-### Good fit
-
-- Emergency VPS checks
-- Quick command execution
-- Small code edits with Claude Code/Codex
-- Reviewing current git changes
-- Restarting services
-- Checking logs
-- Running short scripts
-- Mobile-only “hotfix assist”
-
-### Not ideal
-
-- Long coding sessions
-- Full-screen complex TUI workflows
-- Heavy copy/paste work
-- Anything requiring perfect native terminal ergonomics
-
-Telegram iOS/WebView is convenient, but it is not a full terminal emulator. Treat this as a fast remote-control panel, not a total SSH replacement.
+---
 
 ## Stack
 
-- Python Flask
-- Flask-Sock WebSocket terminal
-- Gunicorn
-- Vanilla HTML/CSS/JS
-- xterm.js vendored under `static/vendor/`
+- Python 3.10+ Flask
+- Flask-Sock (WebSocket terminal)
+- Gunicorn (production)
+- Vanilla HTML/CSS/JS, xterm.js (vendored under `static/vendor/`)
+- glassmorphism CSS + SVG gradients
+
+---
 
 ## Routes
 
-- `/` — monitor dashboard
-- `/terminal` — shell terminal
-- `/claude` — terminal launching Claude Code CLI
-- `/codex` — terminal launching Codex CLI
-- `/api/metrics` — JSON metrics
+| Route | Description |
+|---|---|
+| `/` | Glassmorphism dashboard (CPU/RAM/disk/services/processes) |
+| `/terminal` | PTY shell terminal (xterm.js) |
+| `/claude` | Terminal that auto-launches `claude` CLI |
+| `/codex` | Terminal that auto-launches `codex` CLI |
+| `/api/metrics` | JSON metrics endpoint |
+| `/ws/terminal` | WebSocket for terminal I/O |
 
-## Quick start
+---
 
-This quick start is for local/dev validation. For a real Telegram Mini App, you still need a public HTTPS tunnel/domain and `setChatMenuButton` setup.
+## Easy install (one-command)
+
+For Ubuntu/Debian VPS. Run as the user that will own the service (typically `ubuntu` or your shell user — **not** root).
 
 ```bash
-git clone https://github.com/adryndian/telegram-vps-monitor-miniapp.git
-cd telegram-vps-monitor-miniapp
+curl -fsSL https://raw.githubusercontent.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp/main/scripts/install.sh | bash
+```
+
+> If the install script doesn't exist yet (this repo is still bootstrapping), use the **Manual install** below.
+
+The script will:
+
+1. Clone repo to `~/telegram-vps-monitor-terminal-ai-miniapp/`
+2. Create Python venv + install deps
+3. Copy `.env.example` → `.env` and prompt for required values
+4. Generate a strong random `DASHBOARD_PASSWORD`
+5. Create systemd service `telegram-vps-monitor.service`
+6. Start + enable the service
+7. Print next-step instructions for HTTPS tunnel + Telegram menu button
+
+---
+
+## Manual install
+
+### 1. Clone & set up
+
+```bash
+git clone https://github.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp.git
+cd telegram-vps-monitor-terminal-ai-miniapp
 
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
+```
 
+### 2. Configure
+
+```bash
 cp .env.example .env
 nano .env
 ```
 
-Minimum `.env` values:
+Minimum required:
 
 ```env
-DASHBOARD_PASSWORD=change-this-to-a-strong-random-password
-ALLOWED_TG_USER_ID=your_numeric_telegram_user_id
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TERMINAL_PASSWORD_FALLBACK=false
+DASHBOARD_PASSWORD=<generate-strong-random>
+ALLOWED_TG_USER_ID=<your-numeric-telegram-user-id>
+TELEGRAM_BOT_TOKEN=<bot-father-token>
+TERMINAL_PASSWORD_FALLBACK=true
+HOST=127.0.0.1
+PORT=8787
+REFRESH_SECONDS=5
 ```
 
-Run dev server:
+To get your Telegram numeric user ID, message `@userinfobot` on Telegram.
+
+### 3. Run
+
+**Dev:**
 
 ```bash
 python app.py
 ```
 
-Open locally:
-
-```text
-http://127.0.0.1:8787
-```
-
-Production-style run:
+**Production:**
 
 ```bash
 gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
 ```
 
-Then finish the Telegram Mini App setup:
+Test locally: `http://127.0.0.1:8787` (use `DASHBOARD_PASSWORD` for basic auth).
 
-1. Expose `127.0.0.1:8787` through HTTPS using Cloudflare Tunnel, ngrok, or a domain reverse proxy.
-2. Set the Telegram bot menu button text to `VPS`.
-3. Point the menu button URL to your HTTPS tunnel/domain.
-4. Open the Mini App from Telegram and verify dashboard + terminal auth.
+### 4. Expose via HTTPS
 
-## Environment
+Telegram Mini Apps **require** public HTTPS. Pick one tunneling option below.
 
-See `.env.example`.
-
-Important fields:
-
-- `DASHBOARD_PASSWORD` — fallback dashboard password
-- `ALLOWED_TG_USER_ID` — only this Telegram user can use the Mini App auth
-- `TELEGRAM_BOT_TOKEN` — optional; used for Telegram Mini App auth verification
-- `TERMINAL_PIN` — optional extra terminal PIN
-- `TERMINAL_PASSWORD_FALLBACK=false` — recommended
-
-## Telegram Mini App setup
-
-Your dashboard must be served via public **HTTPS**.
-
-Set the bot menu button:
+### 5. Set the Telegram menu button
 
 ```bash
+BOT_TOKEN=<your-token>
+URL=https://your-domain.example
+
 curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/setChatMenuButton" \
   -H "Content-Type: application/json" \
-  -d '{
-    "menu_button": {
-      "type": "web_app",
-      "text": "VPS",
-      "web_app": {"url": "https://your-domain.example"}
+  -d "{
+    \"menu_button\": {
+      \"type\": \"web_app\",
+      \"text\": \"VPS\",
+      \"web_app\": {\"url\": \"$URL\"}
     }
-  }'
+  }"
 ```
 
-For a specific chat:
+Open Telegram → your bot → tap the `VPS` menu button → dashboard loads.
 
-```bash
-curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/setChatMenuButton" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chat_id": 123456789,
-    "menu_button": {
-      "type": "web_app",
-      "text": "VPS",
-      "web_app": {"url": "https://your-domain.example"}
-    }
-  }'
-```
+---
 
-## Tunneling / HTTPS options
+## HTTPS tunneling options
 
-Telegram Mini Apps require a public HTTPS URL. Pick one:
-
-### Option A — Cloudflare Quick Tunnel
-
-Fastest test path. No account required, but URL is temporary.
+### Option A — Cloudflare Quick Tunnel (fastest test)
 
 ```bash
 cloudflared tunnel --url http://127.0.0.1:8787 --no-autoupdate
 ```
 
-Cloudflare prints a URL like:
+Cloudflare prints a temporary `https://*.trycloudflare.com` URL. Good for testing, **not for production** (URL changes on restart).
 
-```text
-https://random-words.trycloudflare.com
-```
+### Option B — Cloudflare Named Tunnel ⭐ recommended
 
-Use that URL in `setChatMenuButton`.
-
-> Good for testing. Not recommended for permanent use because the URL changes after restart.
-
-### Option B — Cloudflare Named Tunnel recommended
-
-Best for always-on private usage with your own domain/subdomain.
+Always-on with your own domain.
 
 ```bash
 cloudflared tunnel login
@@ -223,36 +212,16 @@ Run:
 cloudflared tunnel run vps-monitor
 ```
 
-Then set your Telegram Mini App URL to:
-
-```text
-https://vps.example.com
-```
+For auto-start: `sudo cloudflared service install`.
 
 ### Option C — ngrok
 
-Good if you already have ngrok and a static domain.
-
 ```bash
 ngrok config add-authtoken <NGROK_TOKEN>
-ngrok http 8787
-```
-
-For stable use:
-
-```bash
 ngrok http --domain=your-static-domain.ngrok-free.app 8787
 ```
 
-### Option D — Caddy/Nginx + domain
-
-If your VPS has a public IP and domain DNS points to it:
-
-```text
-https://vps.example.com -> http://127.0.0.1:8787
-```
-
-Caddy example:
+### Option D — Caddy / Nginx + domain
 
 ```caddyfile
 vps.example.com {
@@ -260,9 +229,11 @@ vps.example.com {
 }
 ```
 
-## systemd user service
+---
 
-Example:
+## systemd service
+
+`/etc/systemd/system/telegram-vps-monitor.service`:
 
 ```ini
 [Unit]
@@ -271,86 +242,221 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/path/to/telegram-vps-monitor-miniapp
-EnvironmentFile=/path/to/telegram-vps-monitor-miniapp/.env
-ExecStart=/path/to/telegram-vps-monitor-miniapp/.venv/bin/gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
+User=ubuntu
+WorkingDirectory=/home/ubuntu/telegram-vps-monitor-terminal-ai-miniapp
+EnvironmentFile=/home/ubuntu/telegram-vps-monitor-terminal-ai-miniapp/.env
+ExecStart=/home/ubuntu/telegram-vps-monitor-terminal-ai-miniapp/.venv/bin/gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
 Restart=always
 RestartSec=5
+KillMode=mixed
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
 ```
+
+Enable + start:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable telegram-vps-monitor
+sudo systemctl start telegram-vps-monitor
+sudo systemctl status telegram-vps-monitor
+```
+
+---
+
+## Environment reference
+
+| Variable | Required | Description |
+|---|---|---|
+| `DASHBOARD_PASSWORD` | ✅ | Fallback dashboard password (basic auth) |
+| `ALLOWED_TG_USER_ID` | ✅ | Numeric Telegram user ID — only this user passes Mini App auth |
+| `TELEGRAM_BOT_TOKEN` | ✅ | Bot token from @BotFather (used to verify `initData` HMAC) |
+| `TERMINAL_PIN` | optional | Extra PIN required to open `/terminal` |
+| `TERMINAL_PASSWORD_FALLBACK` | optional | `true` allows password-based terminal auth as fallback |
+| `HOST` | optional | Default `127.0.0.1` |
+| `PORT` | optional | Default `8787` |
+| `REFRESH_SECONDS` | optional | Dashboard auto-refresh interval, default `5` |
+| `ALERT_RAM_PCT` | optional | RAM alert threshold % |
+| `ALERT_DISK_PCT` | optional | Disk alert threshold % |
+| `ALERT_LOAD_PER_CORE` | optional | Load average per-core alert threshold |
+| `TELEGRAM_CHAT_ID` | optional | For optional bot-driven alert delivery |
+
+See `.env.example` for the full list.
+
+---
+
+## Update existing install
+
+```bash
+cd ~/telegram-vps-monitor-terminal-ai-miniapp
+git pull origin main
+. .venv/bin/activate
+pip install -r requirements.txt
+sudo systemctl restart telegram-vps-monitor
+```
+
+Verify:
+
+```bash
+curl -s -o /dev/null -w 'HTTP:%{http_code}\n' http://127.0.0.1:8787/
+sudo systemctl status telegram-vps-monitor --no-pager
+```
+
+---
 
 ## Ask an AI agent to install this app
 
-Paste this into OpenClaw, Claude Code, Codex, Cursor, or another coding agent with VPS shell access.
+Paste this into Claude Code, Codex, OpenClaw, Cursor, or another coding agent with VPS shell access.
 
-```text
+````text
 Install and configure Telegram VPS Monitor Mini App on this Linux VPS.
 
 Repository:
-https://github.com/adryndian/telegram-vps-monitor-miniapp
+https://github.com/adryndian/telegram-vps-monitor-terminal-ai-miniapp
 
 Goal:
-Create a private Telegram Mini App that lets me monitor the VPS and run emergency/small-task terminal sessions, including Claude Code and Codex, directly from Telegram.
+Create a private Telegram Mini App that lets me monitor the VPS and run
+emergency/small-task terminal sessions, including Claude Code and Codex,
+directly from Telegram.
 
 Requirements:
-1. Clone repo to /opt/telegram-vps-monitor-miniapp or ~/telegram-vps-monitor-miniapp.
+1. Clone repo to ~/telegram-vps-monitor-terminal-ai-miniapp.
 2. Create Python venv and install requirements.txt.
 3. Create .env from .env.example.
 4. Ask me for:
    - Telegram bot token
    - my Telegram numeric user ID
-   - preferred public HTTPS method: Cloudflare Tunnel, ngrok, or domain reverse proxy
-5. Set DASHBOARD_PASSWORD to a strong random value.
-6. Set ALLOWED_TG_USER_ID to my Telegram user ID.
-7. Set TELEGRAM_BOT_TOKEN to my bot token.
-8. Keep TERMINAL_PASSWORD_FALLBACK=false.
-9. Create a systemd service that runs:
+   - preferred public HTTPS method (Cloudflare Tunnel / ngrok / domain reverse proxy)
+5. Generate a strong random DASHBOARD_PASSWORD.
+6. Set ALLOWED_TG_USER_ID and TELEGRAM_BOT_TOKEN to the values I provided.
+7. Set TERMINAL_PASSWORD_FALLBACK=true.
+8. Create systemd service `telegram-vps-monitor.service` running:
    gunicorn -k gthread --threads 8 -b 127.0.0.1:8787 app:app
-10. Start and enable the service.
-11. Verify http://127.0.0.1:8787/api/metrics works.
-12. Configure HTTPS tunnel/reverse proxy.
-13. Use Telegram Bot API setChatMenuButton with text "VPS" and the HTTPS URL.
-14. Test the Mini App from Telegram.
-15. Do not commit or print secrets. Show only masked credentials.
+9. Enable + start the service.
+10. Verify http://127.0.0.1:8787/api/metrics returns 200 with JSON.
+11. Set up HTTPS tunnel/reverse proxy (Cloudflare named tunnel preferred).
+12. Call Telegram Bot API setChatMenuButton with text "VPS" and the HTTPS URL.
+13. Test by opening the Mini App from Telegram on my phone.
+14. Do not commit or print secrets. Show only masked credentials.
 
 Security:
 - Never expose the app over plain HTTP publicly.
 - Never commit .env.
-- Terminal routes /terminal, /claude, /codex must only work for the allowlisted Telegram user.
-```
+- Terminal routes (/terminal, /claude, /codex) must only work for the
+  allowlisted Telegram user (ALLOWED_TG_USER_ID).
+````
 
-## AI agent maintenance prompt
+### Maintenance prompt
 
-Use this when asking an AI agent to update an existing install:
-
-```text
+````text
 Update my Telegram VPS Monitor Mini App safely.
 
 Tasks:
-1. Go to the app directory.
-2. Check git status and show me local changes before overwriting anything.
-3. Pull latest changes from main.
+1. cd to ~/telegram-vps-monitor-terminal-ai-miniapp.
+2. git status and show me local changes before overwriting anything.
+3. git pull origin main.
 4. Preserve .env.
 5. Reinstall requirements if changed.
-6. Restart the dashboard service.
-7. Verify /api/metrics, /, /terminal, /claude, and /codex routes.
-8. Confirm Telegram Mini App URL still works.
+6. Restart the systemd service.
+7. Verify /api/metrics, /, /terminal, /claude, /codex routes return expected status.
+8. Confirm Telegram Mini App URL still works (curl -I against the public URL).
 9. Do not reveal bot token, dashboard password, or tunnel credentials.
+````
+
+---
+
+## Architecture overview
+
 ```
+┌─────────────────┐
+│ Telegram client │  ← Mini App opened from VPS menu button
+└────────┬────────┘
+         │ HTTPS (Cloudflare Tunnel / domain)
+         ▼
+┌─────────────────┐
+│ Flask app:8787  │  ← gunicorn + systemd
+│  ├── /          │  ← glassmorphism dashboard (templates/index.html)
+│  ├── /terminal  │  ← xterm.js terminal page
+│  ├── /api/metrics
+│  └── /ws/terminal (WebSocket → PTY)
+└────────┬────────┘
+         │
+         ▼
+   /proc, ps, systemctl, df, free, uptime
+```
+
+**Auth flow:**
+
+1. Telegram client opens Mini App → `Telegram.WebApp.initData` available
+2. Frontend attaches `initData` as `X-Telegram-Init-Data` header (dashboard) or `?tg=` query param (terminal links)
+3. Backend `auth_ok()` verifies HMAC with `TELEGRAM_BOT_TOKEN` + checks user ID matches `ALLOWED_TG_USER_ID`
+4. Falls back to `DASHBOARD_PASSWORD` basic auth for non-Telegram clients
+
+---
+
+## Troubleshooting
+
+### Dashboard shows AUTH FAILED
+
+- Confirm `TELEGRAM_BOT_TOKEN` matches the bot whose menu button points here
+- Confirm `ALLOWED_TG_USER_ID` is **your** numeric ID (not the bot's)
+- Open from Telegram, not directly from a browser
+
+### Terminal opens but shows `Unauthorized`
+
+- This was a bug pre-v2026-05 — pull latest `main` and restart
+- Verify `app.py` line 58 includes `or request.args.get('tg','')` in `auth_ok()`
+
+### Mini App won't load on Telegram
+
+- Telegram requires **HTTPS**; HTTP URLs silently fail
+- Check tunnel is up: `curl -I https://your-domain.example`
+- Verify menu button: `curl https://api.telegram.org/bot$BOT_TOKEN/getChatMenuButton`
+
+### Service won't start
+
+```bash
+sudo journalctl -u telegram-vps-monitor -n 50 --no-pager
+```
+
+Common causes: `.env` not loaded → check `EnvironmentFile=` path; venv path wrong; port already in use.
+
+### Terminal says `disconnected` immediately
+
+- Cloudflare tunnel may strip WebSocket upgrade — verify ingress config doesn't block `/ws/terminal`
+- For `cloudflared`, WebSockets work by default; for nginx, add `proxy_http_version 1.1` + `Upgrade` headers
+
+---
 
 ## Security checklist
 
-- Do not commit `.env`
-- Do not expose without HTTPS
-- Set `ALLOWED_TG_USER_ID`
-- Prefer `TERMINAL_PASSWORD_FALLBACK=false`
-- Use a private access layer when possible
-- Rotate tunnel URLs/passwords if leaked
-- Do not share screenshots containing public tunnel URLs
-- Remember: terminal access is VPS shell access
+- [ ] `.env` is gitignored (never commit credentials)
+- [ ] App is **only** exposed via HTTPS
+- [ ] `ALLOWED_TG_USER_ID` is set to your numeric Telegram ID
+- [ ] `DASHBOARD_PASSWORD` is a strong random string (≥ 24 chars)
+- [ ] `TERMINAL_PASSWORD_FALLBACK` enabled only if you understand the trade-off
+- [ ] Tunnel credentials (Cloudflare/ngrok) are stored outside the repo
+- [ ] Don't share screenshots that include public tunnel URLs
+- [ ] **Remember:** terminal access = full VPS shell access. Treat the auth setup as critical.
+
+---
+
+## Contributing
+
+PRs welcome for:
+
+- Additional metrics (network I/O, GPU stats, Docker container summaries)
+- More tunnel provider docs (Tailscale, FRP, Bore)
+- Mobile keyboard improvements for the terminal
+- Translation/i18n
+
+Keep the spirit: **lightweight, no build step, no framework lock-in**.
+
+---
 
 ## License
 
-MIT
+MIT — see `LICENSE`.
+
+Built for solo developers and small teams who need a quick mobile lifeline to their VPS.
